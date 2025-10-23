@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Interactive multivariable calculus visualization tool for exploring derivatives, tangent planes, and gradient fields" />
+    <meta name="keywords" content="calculus, multivariable, derivatives, visualization, mathematics, 3D plots" />
+    <meta name="author" content="Calculus Visualization Tool" />
+    <title>Advanced Multivariable Calculus Visualizer</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="Calculus.css" />
+    
+    <!-- Libraries -->
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>∫</text></svg>" />
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>Advanced Multivariable Calculus Visualizer</h1>
+            <p>Explore derivatives, tangent planes, and gradient fields in 3D</p>
+            <div class="theme-toggle">
+                <button id="themeToggle" aria-label="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="controls-section" aria-labelledby="controls-title">
+            <h2 id="controls-title" class="section-title">Function & Parameters</h2>
+            
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label for="func" class="control-label">Function f(x, y):</label>
+                    <div class="input-group">
+                        <input id="func" type="text" value="x^2 + y^2" placeholder="Enter function (e.g., x^2 + y^2)" 
+                               aria-describedby="func-help" />
+                        <button type="button" id="funcHelp" class="help-btn" aria-label="Function help">?</button>
+                    </div>
+                    <div id="func-help" class="help-text" role="tooltip">
+                        Use standard mathematical notation: x^2, sin(x), exp(y), etc.
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="presetSelect" class="control-label">Preset Functions:</label>
+                    <select id="presetSelect" aria-label="Select preset function">
+                        <option value="">Custom</option>
+                        <option value="x^2 + y^2">Paraboloid</option>
+                        <option value="sin(x) + cos(y)">Sine-Cosine</option>
+                        <option value="x*y">Hyperbolic Paraboloid</option>
+                        <option value="exp(-(x^2 + y^2))">Gaussian</option>
+                        <option value="sqrt(x^2 + y^2)">Cone</option>
+                        <option value="x^3 - 3*x*y^2">Monkey Saddle</option>
+                    </select>
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-control">
+                        <label for="x0" class="slider-label">x₀: <span id="x0Label">1</span></label>
+                        <input id="x0" type="range" min="-5" max="5" step="0.1" value="1" 
+                               oninput="updateLabels()" aria-label="X coordinate" />
+                    </div>
+                    <div class="slider-control">
+                        <label for="y0" class="slider-label">y₀: <span id="y0Label">2</span></label>
+                        <input id="y0" type="range" min="-5" max="5" step="0.1" value="2" 
+                               oninput="updateLabels()" aria-label="Y coordinate" />
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="plotBtn" onclick="plotFunction()" class="primary-btn">
+                        <span class="btn-icon">📊</span>
+                        Generate Plot
+                    </button>
+                    <button id="exportBtn" onclick="exportPlot()" class="secondary-btn">
+                        <span class="btn-icon">💾</span>
+                        Export
+                    </button>
+                    <button id="resetBtn" onclick="resetView()" class="secondary-btn">
+                        <span class="btn-icon">🔄</span>
+                        Reset View
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="visualization-section" aria-labelledby="viz-title">
+            <h2 id="viz-title" class="section-title">Visualization</h2>
+            
+            <div class="plot-container">
+                <div class="plot-wrapper">
+                    <h3>3D Surface & Tangent Plane</h3>
+                    <div id="plot3d" class="plot" role="img" aria-label="3D surface plot with tangent plane"></div>
+                    <div class="plot-controls">
+                        <button onclick="toggleSurface()" class="control-btn">Toggle Surface</button>
+                        <button onclick="togglePlane()" class="control-btn">Toggle Tangent Plane</button>
+                        <button onclick="toggleGradient()" class="control-btn">Toggle Gradient</button>
+                    </div>
+                </div>
+                
+                <div class="plot-wrapper">
+                    <h3>2D Contour & Gradient Field</h3>
+                    <div id="plot2d" class="plot" role="img" aria-label="2D contour plot with gradient field"></div>
+                    <div class="plot-controls">
+                        <button onclick="toggleContour()" class="control-btn">Toggle Contours</button>
+                        <button onclick="toggleVectors()" class="control-btn">Toggle Vectors</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="analysis-section" aria-labelledby="analysis-title">
+            <h2 id="analysis-title" class="section-title">Mathematical Analysis</h2>
+            <div id="info" class="analysis-content"></div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2025 Advanced Calculus Visualizer. Built for educational purposes.</p>
+            <div class="footer-links">
+                <a href="#" onclick="showAbout()">About</a>
+                <a href="#" onclick="showHelp()">Help</a>
+                <a href="#" onclick="showKeyboardShortcuts()">Shortcuts</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Generating visualization...</p>
+    </div>
+
+    <!-- Modal for help/about -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <script src="Calculus.js"></script>
+</body>
+
+</html>
