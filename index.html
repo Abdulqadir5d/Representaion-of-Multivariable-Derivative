@@ -4,23 +4,27 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Interactive multivariable calculus visualization tool for exploring derivatives, tangent planes, and gradient fields" />
+    <meta name="description"
+        content="Interactive multivariable calculus visualization tool for exploring derivatives, tangent planes, and gradient fields" />
     <meta name="keywords" content="calculus, multivariable, derivatives, visualization, mathematics, 3D plots" />
     <meta name="author" content="Calculus Visualization Tool" />
     <title>Advanced Multivariable Calculus Visualizer</title>
-    
+
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+        as="style" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
     <link rel="stylesheet" href="Calculus.css" />
-    
+
     <!-- Libraries -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
+
     <!-- Favicon -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>∫</text></svg>" />
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>∫</text></svg>" />
 </head>
 
 <body>
@@ -39,13 +43,13 @@
     <main class="container">
         <section class="controls-section" aria-labelledby="controls-title">
             <h2 id="controls-title" class="section-title">Function & Parameters</h2>
-            
+
             <div class="controls-grid">
                 <div class="control-group">
                     <label for="func" class="control-label">Function f(x, y):</label>
                     <div class="input-group">
-                        <input id="func" type="text" value="x^2 + y^2" placeholder="Enter function (e.g., x^2 + y^2)" 
-                               aria-describedby="func-help" />
+                        <input id="func" type="text" value="x^2 + y^2" placeholder="Enter function (e.g., x^2 + y^2)"
+                            aria-describedby="func-help" />
                         <button type="button" id="funcHelp" class="help-btn" aria-label="Function help">?</button>
                     </div>
                     <div id="func-help" class="help-text" role="tooltip">
@@ -69,13 +73,13 @@
                 <div class="slider-group">
                     <div class="slider-control">
                         <label for="x0" class="slider-label">x₀: <span id="x0Label">1</span></label>
-                        <input id="x0" type="range" min="-5" max="5" step="0.1" value="1" 
-                               oninput="updateLabels()" aria-label="X coordinate" />
+                        <input id="x0" type="range" min="-5" max="5" step="0.1" value="1" oninput="updateLabels()"
+                            aria-label="X coordinate" />
                     </div>
                     <div class="slider-control">
                         <label for="y0" class="slider-label">y₀: <span id="y0Label">2</span></label>
-                        <input id="y0" type="range" min="-5" max="5" step="0.1" value="2" 
-                               oninput="updateLabels()" aria-label="Y coordinate" />
+                        <input id="y0" type="range" min="-5" max="5" step="0.1" value="2" oninput="updateLabels()"
+                            aria-label="Y coordinate" />
                     </div>
                 </div>
 
@@ -98,7 +102,7 @@
 
         <section class="visualization-section" aria-labelledby="viz-title">
             <h2 id="viz-title" class="section-title">Visualization</h2>
-            
+
             <div class="plot-container">
                 <div class="plot-wrapper">
                     <h3>3D Surface & Tangent Plane</h3>
@@ -109,7 +113,7 @@
                         <button onclick="toggleGradient()" class="control-btn">Toggle Gradient</button>
                     </div>
                 </div>
-                
+
                 <div class="plot-wrapper">
                     <h3>2D Contour & Gradient Field</h3>
                     <div id="plot2d" class="plot" role="img" aria-label="2D contour plot with gradient field"></div>
