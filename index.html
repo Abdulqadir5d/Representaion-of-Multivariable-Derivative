@@ -1,30 +1,26 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description"
-        content="Interactive multivariable calculus visualization tool for exploring derivatives, tangent planes, and gradient fields" />
+    <meta name="description" content="Interactive multivariable calculus visualization tool for exploring derivatives, tangent planes, and gradient fields" />
     <meta name="keywords" content="calculus, multivariable, derivatives, visualization, mathematics, 3D plots" />
     <meta name="author" content="Calculus Visualization Tool" />
     <title>Advanced Multivariable Calculus Visualizer</title>
-
+    
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-        as="style" />
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" as="style" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" />
     <link rel="stylesheet" href="Calculus.css" />
-
+    
     <!-- Libraries -->
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.min.js"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-
+    
     <!-- Favicon -->
-    <link rel="icon"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>∫</text></svg>" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>∫</text></svg>" />
 </head>
 
 <body>
@@ -43,13 +39,14 @@
     <main class="container">
         <section class="controls-section" aria-labelledby="controls-title">
             <h2 id="controls-title" class="section-title">Function & Parameters</h2>
-
+            
             <div class="controls-grid">
                 <div class="control-group">
                     <label for="func" class="control-label">Function f(x, y):</label>
                     <div class="input-group">
-                        <input id="func" type="text" value="x^2 + y^2" placeholder="Enter function (e.g., x^2 + y^2)"
-                            aria-describedby="func-help" />
+                        <input id="func" type="text" value="x^2 + y^2" placeholder="Enter function (e.g., x^2 + y^2)" 
+                               aria-describedby="func-help" onclick="calculator.open()" readonly />
+                        <button type="button" id="calculatorBtn" class="calc-btn-small" aria-label="Open calculator">🧮</button>
                         <button type="button" id="funcHelp" class="help-btn" aria-label="Function help">?</button>
                     </div>
                     <div id="func-help" class="help-text" role="tooltip">
@@ -73,13 +70,13 @@
                 <div class="slider-group">
                     <div class="slider-control">
                         <label for="x0" class="slider-label">x₀: <span id="x0Label">1</span></label>
-                        <input id="x0" type="range" min="-5" max="5" step="0.1" value="1" oninput="updateLabels()"
-                            aria-label="X coordinate" />
+                        <input id="x0" type="range" min="-5" max="5" step="0.1" value="1" 
+                               oninput="updateLabels()" aria-label="X coordinate" />
                     </div>
                     <div class="slider-control">
                         <label for="y0" class="slider-label">y₀: <span id="y0Label">2</span></label>
-                        <input id="y0" type="range" min="-5" max="5" step="0.1" value="2" oninput="updateLabels()"
-                            aria-label="Y coordinate" />
+                        <input id="y0" type="range" min="-5" max="5" step="0.1" value="2" 
+                               oninput="updateLabels()" aria-label="Y coordinate" />
                     </div>
                 </div>
 
@@ -102,7 +99,7 @@
 
         <section class="visualization-section" aria-labelledby="viz-title">
             <h2 id="viz-title" class="section-title">Visualization</h2>
-
+            
             <div class="plot-container">
                 <div class="plot-wrapper">
                     <h3>3D Surface & Tangent Plane</h3>
@@ -113,7 +110,7 @@
                         <button onclick="toggleGradient()" class="control-btn">Toggle Gradient</button>
                     </div>
                 </div>
-
+                
                 <div class="plot-wrapper">
                     <h3>2D Contour & Gradient Field</h3>
                     <div id="plot2d" class="plot" role="img" aria-label="2D contour plot with gradient field"></div>
@@ -153,6 +150,61 @@
         <div class="modal-content">
             <span class="modal-close">&times;</span>
             <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Calculator Modal -->
+    <div id="calculatorModal" class="modal calculator-modal" style="display: none;">
+        <div class="modal-content calculator-content">
+            <div class="calculator-header">
+                <h3>Function Calculator</h3>
+                <span class="modal-close">&times;</span>
+            </div>
+            <div class="calculator-body">
+                <div class="calculator-display">
+                    <input type="text" id="calculatorInput" readonly placeholder="Enter function..." />
+                </div>
+                <div class="calculator-buttons">
+                    <button class="calc-btn calc-clear" onclick="calculator.clear()">C</button>
+                    <button class="calc-btn calc-delete" onclick="calculator.delete()">⌫</button>
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('sin(')">sin</button>
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('cos(')">cos</button>
+                    
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('tan(')">tan</button>
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('exp(')">exp</button>
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('log(')">log</button>
+                    <button class="calc-btn calc-function" onclick="calculator.insertFunction('sqrt(')">√</button>
+                    
+                    <button class="calc-btn calc-number" onclick="calculator.insert('x')">x</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('y')">y</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('^')">^</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('/')">/</button>
+                    
+                    <button class="calc-btn calc-number" onclick="calculator.insert('7')">7</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('8')">8</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('9')">9</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('*')">×</button>
+                    
+                    <button class="calc-btn calc-number" onclick="calculator.insert('4')">4</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('5')">5</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('6')">6</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('-')">-</button>
+                    
+                    <button class="calc-btn calc-number" onclick="calculator.insert('1')">1</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('2')">2</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('3')">3</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('+')">+</button>
+                    
+                    <button class="calc-btn calc-number" onclick="calculator.insert('0')">0</button>
+                    <button class="calc-btn calc-number" onclick="calculator.insert('.')">.</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert('(')">(</button>
+                    <button class="calc-btn calc-operator" onclick="calculator.insert(')')">)</button>
+                </div>
+                <div class="calculator-actions">
+                    <button class="calc-btn calc-apply" onclick="calculator.apply()">Apply</button>
+                    <button class="calc-btn calc-cancel" onclick="calculator.close()">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 

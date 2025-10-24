@@ -533,12 +533,23 @@ function showHelp() {
       <li><code>exp(-(x^2 + y^2))</code> - Gaussian</li>
     </ul>
     
+    <h3>Calculator</h3>
+    <p>Click the 🧮 button or press <kbd>C</kbd> to open the calculator:</p>
+    <ul>
+      <li>Use buttons to build functions</li>
+      <li>Mathematical functions: sin, cos, tan, exp, log, sqrt</li>
+      <li>Variables: x, y</li>
+      <li>Operators: +, -, ×, /, ^, (, )</li>
+      <li>Press <kbd>Enter</kbd> to apply the function</li>
+    </ul>
+    
     <h3>Controls</h3>
     <ul>
       <li>Use sliders to adjust the point (x₀, y₀)</li>
       <li>Toggle plot elements on/off</li>
       <li>Export plots as PNG images</li>
       <li>Switch between light and dark themes</li>
+      <li>Use preset functions from the dropdown</li>
     </ul>
   `;
   showModal(content);
@@ -547,11 +558,22 @@ function showHelp() {
 function showKeyboardShortcuts() {
   const content = `
     <h2>Keyboard Shortcuts</h2>
+    <h3>Global Shortcuts</h3>
     <ul>
       <li><kbd>Enter</kbd> - Generate plot</li>
       <li><kbd>Ctrl/Cmd + D</kbd> - Toggle dark mode</li>
       <li><kbd>Escape</kbd> - Close modal</li>
       <li><kbd>R</kbd> - Reset view</li>
+      <li><kbd>C</kbd> - Open calculator</li>
+    </ul>
+    
+    <h3>Calculator Shortcuts</h3>
+    <ul>
+      <li><kbd>Enter</kbd> - Apply function</li>
+      <li><kbd>Escape</kbd> - Close calculator</li>
+      <li><kbd>Backspace</kbd> - Delete character</li>
+      <li><kbd>Delete</kbd> - Clear input</li>
+      <li>Type any character to insert</li>
     </ul>
   `;
   showModal(content);
@@ -560,8 +582,46 @@ function showKeyboardShortcuts() {
 // === KEYBOARD SHORTCUTS ===
 function setupKeyboardShortcuts() {
   document.addEventListener('keydown', (e) => {
-    // Enter to plot
-    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey) {
+    // Calculator shortcuts
+    if (calculator.isOpen) {
+      const input = document.getElementById('calculatorInput');
+      
+      // Calculator-specific shortcuts
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        calculator.apply();
+        return;
+      }
+      
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        calculator.close();
+        return;
+      }
+      
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+        calculator.delete();
+        return;
+      }
+      
+      if (e.key === 'Delete') {
+        e.preventDefault();
+        calculator.clear();
+        return;
+      }
+      
+      // Allow typing in calculator
+      if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
+        e.preventDefault();
+        calculator.insert(e.key);
+        return;
+      }
+    }
+    
+    // Global shortcuts
+    // Enter to plot (when calculator is not open)
+    if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !calculator.isOpen) {
       e.preventDefault();
       plotFunction();
     }
@@ -572,20 +632,128 @@ function setupKeyboardShortcuts() {
       ThemeManager.toggleTheme();
     }
     
-    // Escape to close modal
+    // Escape to close modals
     if (e.key === 'Escape') {
       const modal = document.getElementById('modal');
+      const calcModal = document.getElementById('calculatorModal');
+      
       if (modal.style.display === 'flex') {
         modal.style.display = 'none';
+      } else if (calcModal.style.display === 'flex') {
+        calculator.close();
       }
     }
     
     // R for reset
-    if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+    if (e.key === 'r' && !e.ctrlKey && !e.metaKey && !calculator.isOpen) {
       resetView();
+    }
+    
+    // C to open calculator
+    if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !calculator.isOpen) {
+      calculator.open();
     }
   });
 }
+
+// === CALCULATOR FUNCTIONALITY ===
+const calculator = {
+  isOpen: false,
+  
+  open() {
+    this.isOpen = true;
+    const modal = document.getElementById('calculatorModal');
+    const input = document.getElementById('calculatorInput');
+    const funcInput = document.getElementById('func');
+    
+    // Set current function value
+    input.value = funcInput.value;
+    
+    modal.style.display = 'flex';
+    input.focus();
+    
+    // Close modal handlers
+    const closeBtn = modal.querySelector('.modal-close');
+    closeBtn.onclick = () => this.close();
+    
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        this.close();
+      }
+    };
+  },
+  
+  close() {
+    this.isOpen = false;
+    document.getElementById('calculatorModal').style.display = 'none';
+  },
+  
+  insert(value) {
+    const input = document.getElementById('calculatorInput');
+    const cursorPos = input.selectionStart;
+    const currentValue = input.value;
+    
+    input.value = currentValue.slice(0, cursorPos) + value + currentValue.slice(cursorPos);
+    input.setSelectionRange(cursorPos + value.length, cursorPos + value.length);
+    input.focus();
+  },
+  
+  insertFunction(func) {
+    const input = document.getElementById('calculatorInput');
+    const cursorPos = input.selectionStart;
+    const currentValue = input.value;
+    
+    // Find the end of the function name
+    const funcEnd = func.indexOf('(');
+    const funcName = func.slice(0, funcEnd);
+    
+    // Check if we're inserting into an existing expression
+    const beforeCursor = currentValue.slice(0, cursorPos);
+    const afterCursor = currentValue.slice(cursorPos);
+    
+    // If we're at the start or after an operator, just insert the function
+    if (cursorPos === 0 || /[\+\-\*\/\^\(]/.test(beforeCursor.slice(-1))) {
+      input.value = beforeCursor + func + afterCursor;
+      input.setSelectionRange(cursorPos + func.length, cursorPos + func.length);
+    } else {
+      // Otherwise, wrap the current selection or insert at cursor
+      input.value = beforeCursor + func + afterCursor;
+      input.setSelectionRange(cursorPos + func.length, cursorPos + func.length);
+    }
+    
+    input.focus();
+  },
+  
+  clear() {
+    document.getElementById('calculatorInput').value = '';
+    document.getElementById('calculatorInput').focus();
+  },
+  
+  delete() {
+    const input = document.getElementById('calculatorInput');
+    const cursorPos = input.selectionStart;
+    const currentValue = input.value;
+    
+    if (cursorPos > 0) {
+      input.value = currentValue.slice(0, cursorPos - 1) + currentValue.slice(cursorPos);
+      input.setSelectionRange(cursorPos - 1, cursorPos - 1);
+    }
+    input.focus();
+  },
+  
+  apply() {
+    const calculatorInput = document.getElementById('calculatorInput');
+    const funcInput = document.getElementById('func');
+    
+    if (calculatorInput.value.trim()) {
+      funcInput.value = calculatorInput.value;
+      this.close();
+      plotFunction();
+    } else {
+      Utils.showError('Please enter a function');
+    }
+  }
+};
 
 // === INITIALIZATION ===
 function initializeApp() {
@@ -609,6 +777,12 @@ function initializeApp() {
     updateLabels();
     debouncedPlot();
   });
+  
+  // Calculator button event listener
+  const calculatorBtn = document.getElementById('calculatorBtn');
+  if (calculatorBtn) {
+    calculatorBtn.addEventListener('click', () => calculator.open());
+  }
   
   // Initial plot
   plotFunction();
@@ -642,3 +816,4 @@ window.resetView = resetView;
 window.showAbout = showAbout;
 window.showHelp = showHelp;
 window.showKeyboardShortcuts = showKeyboardShortcuts;
+window.calculator = calculator;
