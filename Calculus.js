@@ -309,12 +309,42 @@ const PlotManager = {
   }
 };
 
+// === FUNCTION TYPE HANDLER ===
+function handleFunctionTypeChange() {
+  const presetSelect = document.getElementById('presetSelect');
+  const funcInput = document.getElementById('func');
+  const calculatorBtn = document.getElementById('calculatorBtn');
+  
+  if (presetSelect.value === "") {
+    // Custom mode selected - SHOW calculator, make input EDITABLE
+    calculatorBtn.style.display = 'block';
+    funcInput.removeAttribute('readonly');
+    funcInput.placeholder = "Enter custom function...";
+  } else {
+    // Preset mode selected - HIDE calculator, make input READ-ONLY
+    calculatorBtn.style.display = 'none';
+    funcInput.setAttribute('readonly', 'true');
+    funcInput.value = presetSelect.value; // Show the function expression
+    plotFunction();
+  }
+}
+
 // === MAIN PLOTTING FUNCTION ===
 async function plotFunction() {
   try {
     Utils.showLoading();
     
-    const expr = document.getElementById('func').value.trim();
+    const presetSelect = document.getElementById('presetSelect');
+    let expr;
+    
+    if (presetSelect.value === "") {
+      // Custom function - get from input field
+      expr = document.getElementById('func').value.trim();
+    } else {
+      // Preset function - get from select value
+      expr = presetSelect.value;
+    }
+    
     const x0 = parseFloat(document.getElementById('x0').value);
     const y0 = parseFloat(document.getElementById('y0').value);
 
@@ -429,9 +459,6 @@ function toggleVectors() {
 // === EXPORT FUNCTIONALITY ===
 function exportPlot() {
   try {
-    const plot3d = document.getElementById('plot3d');
-    const plot2d = document.getElementById('plot2d');
-    
     // Export 3D plot
     Plotly.downloadImage('plot3d', {
       format: 'png',
@@ -477,12 +504,7 @@ function resetView() {
 function setupPresetHandlers() {
   const presetSelect = document.getElementById('presetSelect');
   if (presetSelect) {
-    presetSelect.addEventListener('change', (e) => {
-      if (e.target.value) {
-        document.getElementById('func').value = e.target.value;
-        plotFunction();
-      }
-    });
+    presetSelect.addEventListener('change', handleFunctionTypeChange);
   }
 }
 
@@ -534,7 +556,7 @@ function showHelp() {
     </ul>
     
     <h3>Calculator</h3>
-    <p>Click the 🧮 button or press <kbd>C</kbd> to open the calculator:</p>
+    <p>Click the 🧮 button or press <kbd>C</kbd> to open the calculator (Custom Mode only):</p>
     <ul>
       <li>Use buttons to build functions</li>
       <li>Mathematical functions: sin, cos, tan, exp, log, sqrt</li>
@@ -564,7 +586,7 @@ function showKeyboardShortcuts() {
       <li><kbd>Ctrl/Cmd + D</kbd> - Toggle dark mode</li>
       <li><kbd>Escape</kbd> - Close modal</li>
       <li><kbd>R</kbd> - Reset view</li>
-      <li><kbd>C</kbd> - Open calculator</li>
+      <li><kbd>C</kbd> - Open calculator (Custom Mode only)</li>
     </ul>
     
     <h3>Calculator Shortcuts</h3>
@@ -649,9 +671,13 @@ function setupKeyboardShortcuts() {
       resetView();
     }
     
-    // C to open calculator
+    // C to open calculator (only in custom mode)
     if (e.key === 'c' && !e.ctrlKey && !e.metaKey && !calculator.isOpen) {
-      calculator.open();
+      if (calculator.isCustomMode()) {
+        calculator.open();
+      } else {
+        Utils.showError('Switch to custom mode to use calculator');
+      }
     }
   });
 }
@@ -660,7 +686,17 @@ function setupKeyboardShortcuts() {
 const calculator = {
   isOpen: false,
   
+  isCustomMode() {
+    const presetSelect = document.getElementById('presetSelect');
+    return presetSelect && presetSelect.value === "";
+  },
+  
   open() {
+    if (!this.isCustomMode()) {
+      Utils.showError('Calculator is only available in custom mode');
+      return;
+    }
+    
     this.isOpen = true;
     const modal = document.getElementById('calculatorModal');
     const input = document.getElementById('calculatorInput');
@@ -689,6 +725,8 @@ const calculator = {
   },
   
   insert(value) {
+    if (!this.isCustomMode()) return;
+    
     const input = document.getElementById('calculatorInput');
     const cursorPos = input.selectionStart;
     const currentValue = input.value;
@@ -699,6 +737,8 @@ const calculator = {
   },
   
   insertFunction(func) {
+    if (!this.isCustomMode()) return;
+    
     const input = document.getElementById('calculatorInput');
     const cursorPos = input.selectionStart;
     const currentValue = input.value;
@@ -725,11 +765,14 @@ const calculator = {
   },
   
   clear() {
+    if (!this.isCustomMode()) return;
     document.getElementById('calculatorInput').value = '';
     document.getElementById('calculatorInput').focus();
   },
   
   delete() {
+    if (!this.isCustomMode()) return;
+    
     const input = document.getElementById('calculatorInput');
     const cursorPos = input.selectionStart;
     const currentValue = input.value;
@@ -742,6 +785,11 @@ const calculator = {
   },
   
   apply() {
+    if (!this.isCustomMode()) {
+      Utils.showError('Calculator is only available in custom mode');
+      return;
+    }
+    
     const calculatorInput = document.getElementById('calculatorInput');
     const funcInput = document.getElementById('func');
     
@@ -757,12 +805,25 @@ const calculator = {
 
 // === INITIALIZATION ===
 function initializeApp() {
+  // Fix Canvas2D performance warning
+  const originalGetContext = HTMLCanvasElement.prototype.getContext;
+  HTMLCanvasElement.prototype.getContext = function(...args) {
+    const context = originalGetContext.apply(this, args);
+    if (args[0] === '2d' && context) {
+      context.willReadFrequently = true;
+    }
+    return context;
+  };
+  
   // Setup theme
   ThemeManager.init();
   
   // Setup event listeners
   setupPresetHandlers();
   setupKeyboardShortcuts();
+  
+  // Set initial state for function type
+  handleFunctionTypeChange();
   
   // Debounced plot function for performance
   const debouncedPlot = Utils.debounce(plotFunction, 300);
@@ -817,3 +878,4 @@ window.showAbout = showAbout;
 window.showHelp = showHelp;
 window.showKeyboardShortcuts = showKeyboardShortcuts;
 window.calculator = calculator;
+
